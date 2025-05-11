@@ -6,3 +6,5 @@
         this.success = statusCode
     }
  }
+
+ export { ApiResponse }

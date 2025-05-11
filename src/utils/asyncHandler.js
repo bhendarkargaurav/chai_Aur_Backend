@@ -1,7 +1,7 @@
 // using promise
-//higher order function
+//higher order function      its a helper file
 const asyncHandler = (requestHandler) => {
-    return  (req, res, next) => {
+    return (req, res, next) => {
         Promise.resolve(requestHandler(req, res, next)).
         catch((err) => next(err))
     }
@@ -13,7 +13,6 @@ export { asyncHandler }
 
 
  
-
 
 // using try catch
 
