@@ -20,8 +20,11 @@ const registerUser = asyncHandler(async (req, res) => {
     //check for user creation
     // return res
 
-    const { fullname, email, username,  password} = req.body
+    const { fullname, email, username, password} = req.body
     console.log("email is ", email);
+     console.log("email is ", fullname);
+      console.log("email is ", password);
+       console.log("email is ", username);
 
     if (                  // check its true or not using this method of code
         [fullname, email, username, password].some((field) =>  // any of the above present dont show error
@@ -30,7 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = User.findOne({ // check wheather exixting user is there or not
+    const existedUser = await User.findOne({ // check wheather exixting user is there or not
         $or: [{username}, {email}]
     })
     if(existedUser) {
@@ -38,9 +41,12 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     
     // lines extract the local file paths
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path || null;
+    console.log("avatar local patha", avatarLocalPath)
 
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    const coverImageLocalPath = req.files?.coverimage?.[0]?.path || null;
 
     if(!avatarLocalPath) {
         throw new ApiError(400, "avatar file is required");
@@ -48,7 +54,7 @@ const registerUser = asyncHandler(async (req, res) => {
     
     // upload on cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    const coverimage = await uploadOnCloudinary(coverImageLocalPath)
 
     if(!avatar) {
         throw new ApiError(400, "avatar file is required")
@@ -57,7 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         fullname,
         avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        coverimage: coverimage?.url || "",
         email,
         password,
         username: username.toLowerCase()
