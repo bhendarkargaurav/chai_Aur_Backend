@@ -21,10 +21,6 @@ const registerUser = asyncHandler(async (req, res) => {
     // return res
 
     const { fullname, email, username, password} = req.body
-    console.log("email is ", email);
-     console.log("email is ", fullname);
-      console.log("email is ", password);
-       console.log("email is ", username);
 
     if (                  // check its true or not using this method of code
         [fullname, email, username, password].some((field) =>  // any of the above present dont show error
@@ -42,6 +38,7 @@ const registerUser = asyncHandler(async (req, res) => {
     
     // lines extract the local file paths
     // const avatarLocalPath = req.files?.avatar[0]?.path;
+    console.log("Incoming files:", req.files);
     const avatarLocalPath = req.files?.avatar?.[0]?.path || null;
     console.log("avatar local patha", avatarLocalPath)
 
