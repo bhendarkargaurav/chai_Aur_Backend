@@ -48,7 +48,7 @@ const UserSchema = new mongoose.Schema({
     
 }, {timestamps: true});
 
-// hooks we can use this to perfor something before saving the dat in the code
+// hooks we can use this to perfor something before saving the data in the code
 // like incrypt the password (in salt format)and all
 
 UserSchema.pre("save", async function (next){
@@ -66,10 +66,13 @@ UserSchema.methods.generateAccessToken = function(){
     return jwt.sign(
         { // payload
             _id: this._id, // from mongodb
+            email: this.email,
+            username: this.username,
+            fullname: this.fullname
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_SECRET,
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRYclear
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
         }
     )
 }
@@ -78,13 +81,10 @@ UserSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         { // payload
             _id: this._id, // from mongodb
-            email: this.email,
-            username: this.username,
-            fullname: this.fullname
         },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         }
     )
 }
