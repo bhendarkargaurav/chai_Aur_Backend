@@ -38,12 +38,16 @@ const registerUser = asyncHandler(async (req, res) => {
     
     // lines extract the local file paths
     // const avatarLocalPath = req.files?.avatar[0]?.path;
-    console.log("Incoming files:", req.files);
+    // console.log("Incoming files:", req.files);
     const avatarLocalPath = req.files?.avatar?.[0]?.path || null;
-    console.log("avatar local patha", avatarLocalPath)
 
 
-    const coverImageLocalPath = req.files?.coverimage?.[0]?.path || null;
+    // const coverImageLocalPath = req.files?.coverimage?.[0]?.path || null;
+    //doing using clasic way
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length > 0) {
+        coverImageLocalPath = req.files.coverimage[0].path
+    }
 
     if(!avatarLocalPath) {
         throw new ApiError(400, "avatar file is required");
