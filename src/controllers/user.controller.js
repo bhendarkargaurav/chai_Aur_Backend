@@ -157,6 +157,7 @@ const loginUser = asyncHandler(async (req, res) => {
 const LogOutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
+
         {
             $set: {
                 refreshToken: undefined
@@ -167,6 +168,7 @@ const LogOutUser = asyncHandler(async (req, res) => {
             new: true //want to see new value
         }
     )
+    console.log("user id", req.user._id);
 
     const options = {
         httpOnly: true,
