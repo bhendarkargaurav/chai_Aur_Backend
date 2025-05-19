@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import { User } from "../models/user.models.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import jwt from "jsonwebtoken"
 
 // functionality to manage access and refresh token
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -112,8 +113,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const {email, username, password} = req.body
 
-    if (!email || !username) {
-        throw new ApiError(400, "username or rmail is required")
+    if (!( email || username)) {
+        throw new ApiError(400, "username or email is required")
     }
 
     const user = await User.findOne({
@@ -121,7 +122,7 @@ const loginUser = asyncHandler(async (req, res) => {
     })
 
     if (!user) {
-        throw new ApiError(404, "User does nor exist")
+        throw new ApiError(404, "User does not exist")
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password)
@@ -141,7 +142,7 @@ const loginUser = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refershToken", refreshToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
         new ApiResponse(
             200,
@@ -153,7 +154,7 @@ const loginUser = asyncHandler(async (req, res) => {
     )
 })
 
-// big role of middleware
+// here big role of middleware
 const LogOutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
@@ -181,8 +182,58 @@ const LogOutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User Logged Out"))
 })
 
+const refreshAccssToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+    if(incomingRefreshToken) {
+        throw new ApiError(401, "unauthorized request")
+    }
+    // verify (token) refresh token
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken, 
+            process.env.REFRESH_TOKEN_SECRET
+        )
+        // find the user
+        const user = await User.findById(decodedToken?._id)
+    
+        if(!user) {
+            throw new ApiError(401, "Invalid refresh Token")
+        }
+    
+        // also check with the refresh token ehich is stored in user model
+        if(incomingRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token expired or used")
+        }
+    
+        // all are verify and match now generate new tokens
+        const {accessToken, newrefreshToken} = await generateAccessAndRefreshTokens(user._id)
+    
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+    
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken), options
+        .cookie("accessToken", newrefreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {accessToken, newrefreshToken},
+                "access token refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+    
+})
+
 export {
     registerUser,
     loginUser,
-    LogOutUser
+    LogOutUser,
+    refreshAccssToken
 }
