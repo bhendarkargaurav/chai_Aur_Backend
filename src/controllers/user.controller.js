@@ -9,8 +9,8 @@ import jwt from "jsonwebtoken"
 const generateAccessAndRefreshTokens = async(userId) => {
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
         // save refresh token to database
         user.refreshToken = refreshToken
@@ -182,10 +182,11 @@ const LogOutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User Logged Out"))
 })
 
+//endpoint if the access token expire then generate new ones
 const refreshAccssToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
-    if(incomingRefreshToken) {
+    if(!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request")
     }
     // verify (token) refresh token
