@@ -81,7 +81,7 @@ UserSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         { // payload
             _id: this._id, // from mongodb
-        },
+        },  
         process.env.REFRESH_TOKEN_SECRET,
         {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
