@@ -214,7 +214,7 @@ const refreshAccssToken = asyncHandler(async (req, res) => {
     }
 
     // also check with the refresh token ehich is stored in user model
-    if (incomingRefreshToken !== user?.refreshToken) {
+    if (incomingRefreshToken !== user?.refreshToken) {        //  optional chaining operator.
       throw new ApiError(401, "Refresh token expired or used");
     }
 
@@ -358,7 +358,7 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
 const getUserChannelProfile = asyncHandler(async() => {
     const {username} = req.params
 
-    if(!username?.trim()) {
+    if(!username?.trim()) {           // to remove whitespaces
         throw new ApiError(400, "username is missing")
     }
     // find the doc using username
