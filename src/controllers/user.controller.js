@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 // functionality to manage access and refresh token
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -195,7 +196,7 @@ const LogOutUser = asyncHandler(async (req, res) => {
 //endpoint if the access token expire then generate new ones
 const refreshAccssToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
+    req.cookies.refreshToken || req.body.refreshToken
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "unauthorized request");
@@ -206,8 +207,10 @@ const refreshAccssToken = asyncHandler(async (req, res) => {
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
+    console.log("the decoded valkue is of token is", decodedToken);
     // find the user
     const user = await User.findById(decodedToken?._id);
+    console.log("the user is", user);
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh Token");
@@ -227,17 +230,16 @@ const refreshAccssToken = asyncHandler(async (req, res) => {
       secure: true,
     };
 
-    return (
-      res.status(200).cookie("accessToken", accessToken),
-      options
-        .cookie("accessToken", newrefreshToken, options)
-        .json(
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", newrefreshToken, options)
+    .json(
           new ApiResponse(
             200,
             { accessToken, newrefreshToken },
             "access token refreshed"
           )
-        )
     );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
@@ -255,7 +257,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   }
 
   user.password = newPassword;
-  await User.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
 
   return res
     .status(200)
@@ -265,7 +267,11 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, "current user fetched successfully");
+    .json(new ApiResponse(
+    200, 
+    req.user, 
+    "current user fetched successfully"
+  ));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -355,8 +361,11 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
 })
 
 //aggregation pipeline is used here
-const getUserChannelProfile = asyncHandler(async() => {
+const getUserChannelProfile = asyncHandler(async(req, res) => {
     const {username} = req.params
+
+    // console.log("Requesting channel for username:", username);
+
 
     if(!username?.trim()) {           // to remove whitespaces
         throw new ApiError(400, "username is missing")
@@ -396,7 +405,7 @@ const getUserChannelProfile = asyncHandler(async() => {
                     $size: "$subscribedTo"
                 },
                 isSubscribed: {
-                    $condition: {
+                    $cond: {
                         if: {$in: [req.user?._id, "$subscribers.subscriber"]},
                         then: true,
                         else: false
@@ -404,6 +413,7 @@ const getUserChannelProfile = asyncHandler(async() => {
                 }
             }
         },
+    
         {
             $project: {
                 fullname:1,
@@ -423,10 +433,9 @@ const getUserChannelProfile = asyncHandler(async() => {
         throw new ApiError(404, "channel does not exist")
     }
     return res
-    .status(200
+    .status(200)
     .json(
         new ApiResponse(200, channel[0], "User channel fetched successfully")
-    )
     )
 
 })
